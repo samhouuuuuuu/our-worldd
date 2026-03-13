@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You & Me | Our Story</title>
+    <script src="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/js/fontawesome.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --soft-pink: #f472b6;
+            --warm-cream: #fff5f7;
+            --dark-text: #2d2d2d;
+            --light-text: #666;
+        }
+
+        body {
+            background-color: var(--warm-cream);
+            color: var(--dark-text);
+            line-height: 1.6;
+        }
+
+        /* Password Overlay */
+        #password-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("our-photo.jpg");
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        #password-overlay.hidden {
+            display: none;
+        }
+        .password-box {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .password-box i {
+            font-size: 3rem;
+            color: var(--soft-pink);
+            margin-bottom: 1rem;
+        }
+        #password-input {
+            padding: 0.8rem 1rem;
+            width: 250px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-size: 1rem;
+        }
+        #password-submit {
+            padding: 0.8rem 2rem;
+            background: var(--soft-pink);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        #password-error {
+            color: #ef4444;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        /* Main Site */
+        #main-site {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        #main-site.visible {
+            opacity: 1;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(rgba(255,245,247,0.92), rgba(255,245,247,0.92)), url("our-photo.jpg");
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .heart {
+            position: absolute;
+            color: var(--soft-pink);
+            opacity: 0.6;
+            animation: float 10s infinite ease-in-out;
+        }
+        @keyframes float {
+            0%,100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-100px) rotate(20deg); }
+        }
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--dark-text);
+        }
+        .hero h1 span {
+            color: var(--soft-pink);
+        }
+        .hero .subtext {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+        .timer {
+            font-size: 1.2rem;
+            background: white;
+            padding: 1.5rem 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            margin: 2rem 0;
+        }
+        .timer div {
+            display: inline-block;
+            margin: 0 1rem;
+        }
+        .timer span {
+            display: block;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--soft-pink);
+        }
+
+        /* Section Base Style */
+        section {
+            max-width: 1200px;
+            margin: 5rem auto;
+            padding: 0 2rem;
+        }
+        section h2 {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--dark-text);
+        }
+        section h2 i {
+            color: var(--soft-pink);
+            margin-right: 0.5rem;
+        }
+
+        /* Photo Gallery */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        .gallery-item {
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+        .gallery-item:hover {
+            transform: translateY(-5px);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+        .gallery-item p {
+            padding: 1rem;
+            background: white;
+            text-align: center;
+        }
+        /* Lightbox */
+        #lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9998;
+        }
+        #lightbox.active {
+            display: flex;
+        }
+        #lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+        }
+        #lightbox-close {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        /* Milestone Map */
+        #map {
+            height: 500px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        /* Bucket List ACCORDÉON (PLIABLE) C'EST Jdid */
+        .bucket-list {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .continent-header {
+            width: 100%;
+            padding: 1.5rem 0 0.5rem 0;
+            border-bottom: 2px solid var(--soft-pink);
+            margin-top: 1rem;
+            font-size: 1.4rem;
+            color: var(--soft-pink);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        .continent-header i {
+            transition: transform 0.3s ease;
+        }
+        .continent-list {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .continent-list.open {
+            max-height: 2000px;
+        }
+        .continent-header.open i {
+            transform: rotate(180deg);
+        }
+        .bucket-list li:first-child {
+            font-size: 1.4rem;
+            padding: 1.5rem 0;
+            color: var(--soft-pink);
+            border-bottom: 2px solid var(--soft-pink);
+            list-style: none;
+        }
+        .bucket-list li {
+            list-style: none;
+            padding: 1rem 0;
+            border-bottom: 1px solid #eee;
+            font-size: 1.1rem;
+        }
+        .bucket-list li:last-child {
+            border-bottom: none;
+        }
+        .bucket-list input[type="checkbox"] {
+            width: 1.2rem;
+            height: 1.2rem;
+            margin-right: 1rem;
+            accent-color: var(--soft-pink);
+            cursor: pointer;
+        }
+        .bucket-list .checked {
+            text-decoration: line-through;
+            color: var(--light-text);
+        }
+
+        /* Spotify Playlist */
+        .playlist-container {
+            max-width: 700px;
+            margin: 0 auto;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        /* --------------------------
+        CSS DYAL L3ABAT
+        -------------------------- */
+        .games-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        /* Swipe des cartes de jeux */
+        .games-swiper {
+            width: 100%;
+            padding-bottom: 3rem;
+        }
+        .game-card {
+            background: var(--warm-cream);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+        .game-card:hover {
+            transform: translateY(-5px);
+            border: 2px solid var(--soft-pink);
+        }
+        .game-card i {
+            font-size: 4rem;
+            color: var(--soft-pink);
+            margin-bottom: 1.5rem;
+        }
+        .game-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .game-card p {
+            color: var(--light-text);
+        }
+        .swiper-pagination-bullet-active {
+            background: var(--soft-pink);
+        }
+
+        /* Zone d'affichage du jeu actif */
+        #active-game {
+            margin-top: 2rem;
+            min-height: 400px;
+        }
+        .back-to-games {
+            display: block;
+            margin: 0 auto 2rem;
+            padding: 0.8rem 1.5rem;
+            border: 2px solid var(--soft-pink);
+            background: white;
+            color: var(--soft-pink);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        .back-to-games:hover {
+            background: var(--soft-pink);
+            color: white;
+        }
+        .game-next-btn, .game-reset-btn {
+            display: block;
+            margin: 2rem auto 0;
+            padding: 0.8rem 2rem;
+            background: var(--soft-pink);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        /* Quiz Game CSS */
+        .quiz-question {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .quiz-options {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .quiz-option {
+            padding: 1rem;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .quiz-option:hover {
+            border-color: var(--soft-pink);
+        }
+        .quiz-option.correct {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+        .quiz-option.wrong {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+        .quiz-score {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            color: var(--soft-pink);
+        }
+        #quiz-reset {
+            display: block;
+            margin: 2rem auto 0;
+            padding: 0.8rem 2rem;
+            background: var(--soft-pink);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        /* Interview Game CSS */
+        .interview-container {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+        .interview-question-counter {
+            color: var(--light-text);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+        .interview-current-question {
+            font-size: 1.5rem;
+            line-height: 1.8;
+            margin-bottom: 3rem;
+            min-height: 150px;
+            display: grid;
+            place-items: center;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem;
+            color: var(--light-text);
+        }
+        footer i {
+            color: var(--soft-pink);
+            margin: 0 0.5rem;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            .timer div {
+                margin: 0 0.5rem;
+            }
+            .timer span {
+                font-size: 1.5rem;
+            }
+            .game-card {
+                height: 250px;
+            }
+            .interview-current-question {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="password-overlay">
+        <div class="password-box">
+            <i class="fas fa-heart"></i>
+            <h2>Entrer l'mot de passe </h2>
+            <input type="password" id="password-input" placeholder="Mot de passe">
+            <br>
+            <button id="password-submit">Ouvrir</button>
+            <p id="password-error">7abiibi wallah !</p>
+        </div>
+    </div>
+
+    <div id="main-site">
+        <section class="hero">
+            <h1>Me & <span>You</span></h1>
+            <p class="subtext">Notre anniversaire: 27 Janvier 2026</p>
+            <div class="timer">
+                <div><span id="days">0</span> <span id="days-label">Jours</span></div>
+                <div><span id="hours">0</span> Heures</div>
+                <div><span id="minutes">0</span> Minutes</div>
+                <div><span id="seconds">0</span> Seconds</div>
+            </div>
+            <div class="heart" style="left:10%;top:20%;font-size:2rem;">❤️</div>
+            <div class="heart" style="left:80%;top:30%;font-size:1.5rem;animation-delay:2s;">💕</div>
+            <div class="heart" style="left:20%;top:70%;font-size:1.8rem;animation-delay:4s;">💖</div>
+            <div class="heart" style="left:75%;top:60%;font-size:2.2rem;animation-delay:6s;">❤️</div>
+        </section>
+
+        <!-- Gallery -->
+        <section class="gallery">
+            <h2><i class="fas fa-images"></i> Nos Souvenirs</h2>
+            <div class="gallery-grid">
+                <div class="gallery-item">
+                    <img src="2 (2).jpg" alt="First date coffee shop">
+                    <p>First date in da coffe shop🤍</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="2.jpg" alt="Second date beach">
+                    <p>seconde date in da beach 🌊</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="1.jpg" alt="Third date Mr fo9a3a">
+                    <p>third one, Mr fo9a3a </p>
+                </div>
+            </div>
+        </section>
+
+        <div id="lightbox">
+            <span id="lightbox-close"><i class="fas fa-times"></i></span>
+            <img src="" alt="Full size photo" id="lightbox-img">
+        </div>
+
+        <section class="map-section">
+            <h2><i class="fas fa-map-marker-alt"></i> win Tlamina </h2>
+            <div id="map"></div>
+        </section>
+
+        <!-- Bucket List COMPLÈTE, PLIABLE -->
+        <section class="bucket-section">
+            <h2><i class="fas fa-list-ul"></i> our Bucket List</h2>
+            <ul class="bucket-list">
+                <li><input type="checkbox" class="bucket-check"> <strong> ga3 l3alem 🌍</strong></li>
+
+                <!-- Europe -->
+                <li class="continent-header">🇪🇺 Europe <i class="fas fa-chevron-down"></i></li>
+                <div class="continent-list">
+                    <li><input type="checkbox" class="bucket-check"> Albanie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Allemagne matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Andorre matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Autriche matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Belgique matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Biélorussie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Bosnie-Herzégovine matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Bulgarie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Chypre matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Croatie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Danemark matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Espagne matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Estonie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Finlande matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> France matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Grèce matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Hongrie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Irlande matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Islande matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Italie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Lettonie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Liechtenstein matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Lituanie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Luxembourg matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Malte matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Moldavie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Monaco matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Monténégro matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Norvège matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Pays-Bas matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Pologne matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Portugal matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> République Tchèque matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Roumanie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Russie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Saint-Marin matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Serbie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Slovaquie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Slovénie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Suède matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Suisse matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Ukraine matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Vatican matet !</li>
+                </div>
+
+                <!-- Afrique -->
+                <li class="continent-header">🌍 Afrique <i class="fas fa-chevron-down"></i></li>
+                <div class="continent-list">
+                    <li><input type="checkbox" class="bucket-check"> Algérie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Angola matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Bénin matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Botswana matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Burkina Faso matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Burundi matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Cameroun matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Cap-Vert matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Comores matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Congo (RDC) matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Congo (Brazzaville) matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Côte d'Ivoire matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Djibouti matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Égypte matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Érythrée matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Eswatini matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Éthiopie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Gabon matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Gambie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Ghana matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Guinée matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Guinée-Bissau matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Guinée Équatoriale matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Kenya matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Lesotho matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Liberia matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Libye matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Madagascar matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Malawi matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Mali matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Maroc matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Maurice matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Mauritanie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Mozambique matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Namibie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Niger matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Nigeria matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Ouganda matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Rwanda matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> São Tomé-et-Príncipe matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Sénégal matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Seychelles matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Sierra Leone matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Somalie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Soudan matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Soudan du Sud matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Tanzanie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Tchad matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Togo matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Tunisie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Zambie matet !</li>
+                    <li><input type="checkbox" class="bucket-check"> Zimbabwe matet !</li>
+                </div>
+
+                <!-- Asie -->
+                <li class="continent-header">🌏 Asie <i class="fas fa-chevron-down"></i></li>
+                <div class="continent-list">
+                    <li><input type="checkbox" class="bucket-check"> Afghanistan</li>
+                    <li><input type="checkbox" class="bucket-check"> Arabie Saoudite</li>
+                    <li><input type="checkbox" class="bucket-check"> Arménie</li>
+                    <li><input type="checkbox" class="bucket-check"> Azerbaïdjan</li>
+                    <li><input type="checkbox" class="bucket-check"> Bahreïn</li>
+                    <li><input type="checkbox" class="bucket-check"> Bangladesh</li>
+                    <li><input type="checkbox" class="bucket-check"> Bhoutan</li>
+                    <li><input type="checkbox" class="bucket-check"> Birmanie</li>
+                    <li><input type="checkbox" class="bucket-check"> Brunéi</li>
+                    <li><input type="checkbox" class="bucket-check"> Cambodge</li>
+                    <li><input type="checkbox" class="bucket-check"> Chine</li>
+                    <li><input type="checkbox" class="bucket-check"> Corée du Nord</li>
+                    <li><input type="checkbox" class="bucket-check"> Corée du Sud</li>
+                    <li><input type="checkbox" class="bucket-check"> Émirats Arabes Unis</li>
+                    <li><input type="checkbox" class="bucket-check"> Géorgie</li>
+                    <li><input type="checkbox" class="bucket-check"> Inde</li>
+                    <li><input type="checkbox" class="bucket-check"> Indonésie</li>
+                    <li><input type="checkbox" class="bucket-check"> Iran</li>
+                    <li><input type="checkbox" class="bucket-check"> Iraq</li>
+                    <li><input type="checkbox" class="bucket-check"> Israël</li>
+                    <li><input type="checkbox" class="bucket-check"> Japon</li>
+                    <li><input type="checkbox" class="bucket-check"> Jordanie</li>
+                    <li><input type="checkbox" class="bucket-check"> Kazakhstan</li>
+                    <li><input type="checkbox" class="bucket-check"> Kirghizistan</li>
+                    <li><input type="checkbox" class="bucket-check"> Koweït</li>
+                    <li><input type="checkbox" class="bucket-check"> Laos</li>
+                    <li><input type="checkbox" class="bucket-check"> Liban</li>
+                    <li><input type="checkbox" class="bucket-check"> Malaisie</li>
+                    <li><input type="checkbox" class="bucket-check"> Maldives</li>
+                    <li><input type="checkbox" class="bucket-check"> Mongolie</li>
+                    <li><input type="checkbox" class="bucket-check"> Népal</li>
+                    <li><input type="checkbox" class="bucket-check"> Oman</li>
+                    <li><input type="checkbox" class="bucket-check"> Ouzbékistan</li>
+                    <li><input type="checkbox" class="bucket-check"> Pakistan</li>
+                    <li><input type="checkbox" class="bucket-check"> Palestine</li>
+                    <li><input type="checkbox" class="bucket-check"> Philippines</li>
+                    <li><input type="checkbox" class="bucket-check"> Qatar</li>
+                    <li><input type="checkbox" class="bucket-check"> Singapour</li>
+                    <li><input type="checkbox" class="bucket-check"> Sri Lanka</li>
+                    <li><input type="checkbox" class="bucket-check"> Syrie</li>
+                    <li><input type="checkbox" class="bucket-check"> Tadjikistan</li>
+                    <li><input type="checkbox" class="bucket-check"> Thaïlande</li>
+                    <li><input type="checkbox" class="bucket-check"> Timor-Oriental</li>
+                    <li><input type="checkbox" class="bucket-check"> Turkménistan</li>
+                    <li><input type="checkbox" class="bucket-check"> Turquie</li>
+                    <li><input type="checkbox" class="bucket-check"> Vietnam</li>
+                    <li><input type="checkbox" class="bucket-check"> Yémen</li>
+                </div>
+
+                <!-- Amérique du Nord -->
+                <li class="continent-header">🌎 Amérique du Nord <i class="fas fa-chevron-down"></i></li>
+                <div class="continent-list">
+                    <li><input type="checkbox" class="bucket-check"> Antigua-et-Barbuda</li>
+                    <li><input type="checkbox" class="bucket-check"> Bahamas</li>
+                    <li><input type="checkbox" class="bucket-check"> Barbade</li>
+                    <li><input type="checkbox" class="bucket-check"> Belize</li>
+                    <li><input type="checkbox" class="bucket-check"> Canada</li>
+                    <li><input type="checkbox" class="bucket-check"> Costa Rica</li>
+                    <li><input type="checkbox" class="bucket-check"> Cuba</li>
+                    <li><input type="checkbox" class="bucket-check"> Dominique</li>
+                    <li><input type="checkbox" class="bucket-check"> République Dominicaine</li>
+                    <li><input type="checkbox" class="bucket-check"> El Salvador</li>
+                    <li><input type="checkbox" class="bucket-check"> Grenade</li>
+                    <li><input type="checkbox" class="bucket-check"> Guatemala</li>
+                    <li><input type="checkbox" class="bucket-check"> Haïti</li>
+                    <li><input type="checkbox" class="bucket-check"> Honduras</li>
+                    <li><input type="checkbox" class="bucket-check"> Jamaïque</li>
+                    <li><input type="checkbox" class="bucket-check"> Mexique</li>
+                    <li><input type="checkbox" class="bucket-check"> Nicaragua</li>
+                    <li><input type="checkbox" class="bucket-check"> Panama</li>
+                    <li><input type="checkbox" class="bucket-check"> Saint-Christophe-et-Niévès</li>
+                    <li><input type="checkbox" class="bucket-check"> Sainte-Lucie</li>
+                    <li><input type="checkbox" class="bucket-check"> Saint-Vincent-et-les-Grenadines</li>
+                    <li><input type="checkbox" class="bucket-check"> Trinité-et-Tobago</li>
+                    <li><input type="checkbox" class="bucket-check"> États-Unis</li>
+                </div>
+
+                <!-- Amérique du Sud -->
+                <li class="continent-header">🌎 Amérique du Sud <i class="fas fa-chevron-down"></i></li>
+                <div class="continent-list">
+                    <li><input type="checkbox" class="bucket-check"> Argentine</li>
+                    <li><input type="checkbox" class="bucket-check"> Bolivie</li>
+                    <li><input type="checkbox" class="bucket-check"> Brésil</li>
+                    <li><input type="checkbox" class="bucket-check"> Chili</li>
+                    <li><input type="checkbox" class="bucket-check"> Colombie</li>
+                    <li><input type="checkbox" class="bucket-check"> Équateur</li>
+                    <li><input type="checkbox" class="bucket-check"> Guyana</li>
+                    <li><input type="checkbox" class="bucket-check"> Paraguay</li>
+                    <li><input type="checkbox" class="bucket-check"> Pérou</li>
+                    <li><input type="checkbox" class="bucket-check"> Suriname</li>
+                    <li><input type="checkbox" class="bucket-check"> Uruguay</li>
+                    <li><input type="checkbox" class="bucket-check"> Venezuela</li>
+                </div>
+
+                <!-- Océanie -->
+                <li class="continent-header">🌏 Océanie <i class="fas fa-chevron-down"></i></li>
+                <div class="continent-list">
+                    <li><input type="checkbox" class="bucket-check"> Australie</li>
+                    <li><input type="checkbox" class="bucket-check"> Fidji</li>
+                    <li><input type="checkbox" class="bucket-check"> Kiribati</li>
+                    <li><input type="checkbox" class="bucket-check"> Îles Marshall</li>
+                    <li><input type="checkbox" class="bucket-check"> Micronésie</li>
+                    <li><input type="checkbox" class="bucket-check"> Nauru</li>
+                    <li><input type="checkbox" class="bucket-check"> Nouvelle-Zélande</li>
+                    <li><input type="checkbox" class="bucket-check"> Palaos</li>
+                    <li><input type="checkbox" class="bucket-check"> Papouasie-Nouvelle-Guinée</li>
+                    <li><input type="checkbox" class="bucket-check"> Salomon</li>
+                    <li><input type="checkbox" class="bucket-check"> Samoa</li>
+                    <li><input type="checkbox" class="bucket-check"> Tonga</li>
+                    <li><input type="checkbox" class="bucket-check"> Tuvalu</li>
+                    <li><input type="checkbox" class="bucket-check"> Vanuatu</li>
+                </div>
+            </ul>
+        </section>
+
+        <!-- Spotify Playlist -->
+        <section class="playlist-section">
+            <h2><i class="fas fa-music"></i> Nos Chansons</h2>
+            <div class="playlist-container">
+                <iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/5Vuv9sUlJz7Z9s7xQZ8l7L?utm_source=generator&theme=0" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+            </div>
+        </section>
+
+        <!-- Section des jeux -->
+        <section class="games-section">
+            <h2><i class="fas fa-gamepad"></i> games </h2>
+            <div class="games-container">
+                <button class="back-to-games" id="back-to-games" style="display: none;">back to game liste </button>
+                <!-- Liste des jeux swipable -->
+                <div class="games-swiper swiper mySwiper">
+                    <div class="swiper-wrapper">
+                        <!-- Carte Quiz -->
+                        <div class="swiper-slide game-card" data-game="quiz">
+                            <i class="fas fa-question-circle"></i>
+                            <h3>Quiz How well do you know me?</h3>
+                            <p>jss maTa3rfinich mais rou7 brq </p>
+                        </div>
+                        <!-- Nouvelle carte Interview Game -->
+                        <div class="swiper-slide game-card" data-game="interview">
+                            <i class="fas fa-microphone"></i>
+                            <h3> Interview Game</h3>
+                            <p>akhtari des question ya3jboke w aji sa9sihoumli f insta </p>
+                        </div>
+                    </div>
+                    <div class="swiper-pagination"></div>
+                </div>
+                <div id="active-game"></div>
+            </div>
+        </section>
+
+        <footer>
+            <p>Made with <i class="fas fa-heart"></i> pour nous</p>
+        </footer>
+    </div>
+
+    <script>
+        // --------------------------
+        // PARAMÈTRES À MODIFIER
+        // --------------------------
+        const SITE_PASSWORD = "houssamdouaa";
+        const RELATIONSHIP_START = new Date('2026-01-27T00:00:00');
+        const MAP_MILESTONES = [{ lat: 35.9268, lng: 0.0849, popup: "Win l9ina b lwel: Ecole Nationale Supérieure d'Agronomie, Mostaganem 🤍" }];
+        const quizQuestionsPerRound = 10; // Nombre de questions par quiz
+
+        // 100 QUESTIONS QUIZ (restées intactes)
+        const quizQuestions = [
+            {question: "What's my all-time favorite movie that I can rewatch 100 times?", options: ["Inception", "The Notebook", "Interstellar", "Parasite"], correct: 1},
+            {question: "What was the first thing I noticed about you when we met?", options: ["Your smile", "Your laugh", "Your eyes", "Your kindness"], correct: 0},
+            {question: "What's my biggest irrational fear?", options: ["Spiders", "Heights", "Clowns", "Being alone forever"], correct: 3},
+            {question: "What's my go-to comfort food when I'm sad?", options: ["Pizza", "Couscous", "Ice cream", "Chakhchoukha"], correct: 3},
+            {question: "What's the first trip I ever want to take with you?", options: ["Marrakech", "Paris", "Istanbul", "Dubai"], correct: 0},
+            {question: "What's my favorite hobby that I could spend all day doing?", options: ["Playing video games", "Drawing", "Cooking", "Watching shows"], correct: 2},
+            {question: "What's my biggest pet peeve that makes me mad instantly?", options: ["People being rude", "Lateness", "Wasting food", "Loud chewers"], correct: 1},
+            {question: "What's the song I've had on repeat for the past month?", options: ["Me & U", "Die For You", "All Of Me", "Perfect"], correct: 0},
+            {question: "What's my dream job that I've always wanted to do?", options: ["Engineer", "Chef", "Travel blogger", "Teacher"], correct: 1},
+            {question: "What's the most spontaneous thing I've ever done?", options: ["Booked a last minute trip", "Dyed my hair", "Quit a bad job", "Adopted a pet"], correct: 0},
+            {question: "Who's my celebrity crush that I've had for years?", options: ["Zendaya", "Ryan Gosling", "Timothée Chalamet", "Taylor Swift"], correct: 1},
+            {question: "What's my favorite season of the year?", options: ["Spring", "Summer", "Fall", "Winter"], correct: 2},
+            {question: "What's the best gift I've ever received?", options: ["My first phone", "A surprise trip", "Your love letter", "A pet"], correct: 2},
+            {question: "What's my biggest goal for the next 5 years?", options: ["Buy a house", "Travel the world", "Start a family", "Get my dream job"], correct: 2},
+            {question: "What's the thing I'm most insecure about?", options: ["My laugh", "My height", "My work", "My ability to love well"], correct: 3},
+            {question: "What's my favorite type of music to listen to when I'm happy?", options: ["Pop", "Rap", "R&B", "Afrobeats"], correct: 2},
+            {question: "What was my first ever job?", options: ["Barista", "Retail worker", "Tutor", "Intern at a company"], correct: 2},
+            {question: "What's the show I've binged more than any other?", options: ["Friends", "Stranger Things", "The Office", "Game of Thrones"], correct: 2},
+            {question: "What's the first sport I ever played as a kid?", options: ["Football", "Basketball", "Tennis", "Swimming"], correct: 0},
+            {question: "What's the thing that makes me laugh harder than anything else?", options: ["Your bad jokes", "Cute animal videos", "Comedy shows", "Pranks"], correct: 0},
+            {question: "What's my favorite holiday to celebrate?", options: ["Birthdays", "Christmas", "Eid", "New Year's Eve"], correct: 0},
+            {question: "What's the thing I miss most about my childhood?", options: ["No responsibilities", "My grandma's cooking", "Playing outside all day", "Sleeping in"], correct: 1},
+            {question: "What's the most adventurous thing I've ever done?", options: ["Skydiving", "Hiked a mountain", "Traveled alone to a new country", "Swam with dolphins"], correct: 1},
+            {question: "What's my least favorite food that I refuse to eat?", options: ["Olives", "Seafood", "Mushrooms", "Spinach"], correct: 2},
+            {question: "What's the app I open first thing every morning?", options: ["Instagram", "WhatsApp", "Spotify", "TikTok"], correct: 1},
+            {question: "What's the quality I admire most about you?", options: ["Your kindness", "Your sense of humor", "Your ambition", "Your patience"], correct: 0},
+            {question: "What's the first date we ever went on that I loved the most?", options: ["Coffee shop", "Beach day", "Mr Fou9a3a dinner", "Movie night"], correct: 2},
+            {question: "What's the thing I want to learn how to do most?", options: ["Play guitar", "Speak Spanish", "Bake sourdough", "Paint"], correct: 1},
+            {question: "What's my favorite way to spend a lazy Sunday?", options: ["Stay in bed all day", "Go for a long walk", "Cook a big meal", "Watch movies with you"], correct: 3},
+            {question: "What's the biggest mistake I've ever made that I learned from?", options: ["Quit school too early", "Dated the wrong person", "Wasted money on something stupid", "Missed a family event"], correct: 1},
+            {question: "What's the animal I've always wanted to have as a pet?", options: ["Dog", "Cat", "Rabbit", "Turtle"], correct: 0},
+            {question: "What's the book that changed my perspective on life?", options: ["The Alchemist", "Atomic Habits", "Beach Read", "Sapiens"], correct: 0},
+            {question: "What's my favorite way to decompress after a long week?", options: ["Take a long shower", "Hang out with friends", "Play video games", "Cuddle with you"], correct: 3},
+            {question: "What's the thing I'm most proud of accomplishing in my life?", options: ["Graduated university", "Learned to cook", "Traveled alone", "Built a good relationship with my family"], correct: 0},
+            {question: "What's my least favorite chore that I hate doing?", options: ["Dishes", "Laundry", "Taking out the trash", "Cleaning the bathroom"], correct: 3},
+            {question: "What's the concert I've always wanted to go to?", options: ["The Weeknd", "Taylor Swift", "Drake", "Bruno Mars"], correct: 0},
+            {question: "What's the first gift I ever got you?", options: ["Flowers", "A hoodie", "A handwritten letter", "Chocolate"], correct: 2},
+            {question: "What's the thing that always calms me down when I'm stressed?", options: ["Listening to music", "Talking to you", "Taking a nap", "Going for a drive"], correct: 1},
+            {question: "What's my favorite ice cream flavor?", options: ["Vanilla", "Chocolate", "Strawberry", "Mint chocolate chip"], correct: 2},
+            {question: "What's the city I've always wanted to live in?", options: ["Casablanca", "Paris", "New York", "Barcelona"], correct: 3},
+            {question: "What's the holiday tradition my family does every year that I love?", options: ["Big family dinner", "Exchange gifts", "Travel to our grandma's house", "Watch the same movie every year"], correct: 2},
+            {question: "What's the thing I'm most scared of losing?", options: ["My family", "My friends", "You", "My job"], correct: 2},
+            {question: "What's the weirdest talent I have that no one knows about?", options: ["I can solve a Rubik's cube fast", "I can juggle", "I can sing opera", "I can name all countries in 2 minutes"], correct: 3},
+            {question: "What's the first song I ever sang to you?", options: ["Me & U", "All Of Me", "Perfect", "Die For You"], correct: 0},
+            {question: "What's my favorite type of weather?", options: ["Sunny and hot", "Rainy and cold", "Snowy", "Windy spring days"], correct: 1},
+            {question: "What's the thing I want to do with you before we turn 30?", options: ["Buy a house together", "Adopt a dog", "Travel to 10 countries", "Get married"], correct: 3},
+            {question: "What's the app I use the most every single day?", options: ["TikTok", "Instagram", "WhatsApp", "Spotify"], correct: 0},
+            {question: "What's the worst first date I ever went on before you?", options: ["They were rude to waiters", "They showed up 2 hours late", "They talked about their ex the whole time", "They forgot our plans entirely"], correct: 2},
+            {question: "What's my favorite flower that you can buy me any time?", options: ["Roses", "Sunflowers", "Tulips", "Lilies"], correct: 1},
+            {question: "What's the thing I look forward to the most every day?", options: ["Talking to you", "Eating dinner", "Going to sleep", "Waking up"], correct: 0},
+            {question: "What's the sport I love watching but hate playing?", options: ["Football", "Basketball", "Tennis", "Boxing"], correct: 0},
+            {question: "What's the holiday I hate the most?", options: ["Valentine's Day", "Halloween", "New Year's Eve", "April Fools' Day"], correct: 3},
+            {question: "What's the thing I collect for fun?", options: ["Vinyl records", "Stamps", "Sneakers", "Vintage books"], correct: 2},
+            {question: "What's the biggest fear I have for our future?", options: ["Losing each other", "Not reaching our goals", "Growing apart", "Not being able to take care of you"], correct: 3},
+            {question: "What's my favorite way to celebrate my birthday?", options: ["Big party with friends", "Small dinner with family", "Quiet day with you", "Go on a trip"], correct: 2},
+            {question: "What's the thing I find most attractive about you?", options: ["Your smile", "Your brain", "Your heart", "Your sense of humor"], correct: 2},
+            {question: "What's the first movie we ever watched together?", options: ["The Notebook", "Spider-Man", "Barbie", "Oppenheimer"], correct: 0},
+            {question: "What's my go-to order at a coffee shop?", options: ["Latte", "Espresso", "Mocha", "Iced coffee"], correct: 2},
+            {question: "What's the country I've never been to but want to visit more than any other?", options: ["Japan", "Brazil", "France", "South Korea"], correct: 0},
+            {question: "What's the thing I argue with you about the most?", options: ["What to eat for dinner", "What movie to watch", "Being late", "Leaving things on the floor"], correct: 3},
+            {question: "What's the song that always makes me cry when I hear it?", options: ["Lover by Taylor Swift", "Make You Feel My Love", "At Last", "Someone Like You"], correct: 1},
+            {question: "What's my favorite type of candy?", options: ["Sour candy", "Chocolate", "Gummy bears", "Lollipops"], correct: 1},
+            {question: "What's the worst injury I've ever had?", options: ["Broke my arm", "Sprained my ankle", "Got a concussion", "Stitched my head"], correct: 1},
+            {question: "What's the thing I always steal from you?", options: ["Your hoodies", "Your phone charger", "Your snacks", "Your headphones"], correct: 0},
+            {question: "What's the first place I told you I loved you?", options: ["Our third date", "Over text", "On a walk at the beach", "At your birthday party"], correct: 2},
+            {question: "What's my favorite board game to play with friends?", options: ["Monopoly", "Codenames", "Uno", "Pictionary"], correct: 2},
+            {question: "What's the thing I miss most about you when we're apart?", options: ["Your hugs", "Your voice", "Your cooking", "Waking up next to you"], correct: 3},
+            {question: "What's the dream I keep having over and over?", options: ["Traveling the world with you", "Buying our dream house", "Adopting a dog", "Getting married on a beach"], correct: 0},
+            {question: "What's my least favorite thing about being an adult?", options: ["Paying bills", "Going to work every day", "Doing taxes", "Being responsible for everything"], correct: 0},
+            {question: "What's the thing I'm most excited to do with you this year?", options: ["Go on our big vacation", "Celebrate our anniversary", "Move in together", "Adopt a pet"], correct: 2},
+            {question: "What's the talent I wish I had?", options: ["I could sing well", "I could draw", "I could speak 5 languages", "I could play piano"], correct: 2},
+            {question: "What's my favorite way to exercise?", options: ["Go to the gym", "Go for a run", "Play football with friends", "Yoga at home"], correct: 2},
+            {question: "What's the thing that always makes me smile no matter what?", options: ["You sending me cute memes", "My mom's cooking", "Seeing a dog on the street", "My favorite song coming on"], correct: 0},
+            {question: "What's the worst movie I've ever seen?", options: ["The Emoji Movie", "Cats", "Morbius", "Space Jam 2"], correct: 1},
+            {question: "What's the first social media I ever had?", options: ["Facebook", "Instagram", "Snapchat", "TikTok"], correct: 0},
+            {question: "What's the thing I value most in a relationship?", options: ["Trust", "Communication", "Laughter", "Mutual respect"], correct: 1},
+            {question: "What's the place I feel the most safe?", options: ["At my parents' house", "In your arms", "In my bedroom", "At my favorite café"], correct: 1},
+            {question: "What's the weirdest food combination I love?", options: ["Pizza and chocolate", "Fries and ice cream", "Peanut butter and pickles", "Cheese and honey"], correct: 1},
+            {question: "What's the goal I'm working towards right now?", options: ["Get a promotion at work", "Learn a new skill", "Save enough money for our trip", "Finish my degree"], correct: 3},
+            {question: "What's the thing I hate the most that you do?", options: ["Leave wet towels on the bed", "Forget to text me when you're late", "Eat my snacks", "Leave dishes in the sink"], correct: 0},
+            {question: "What's the best day of my life so far?", options: ["The day I graduated", "The day I met you", "The day I adopted my pet", "The day I got my first job"], correct: 1},
+            {question: "What's my favorite thing to do on a night out?", options: ["Go dancing", "Go to a nice dinner", "Have a few drinks with friends", "Go to a concert"], correct: 1},
+            {question: "What's the thing I want to teach you how to do?", options: ["Cook my favorite meal", "Play my favorite game", "Drive stick shift", "Speak my first language fluently"], correct: 0},
+            {question: "What's the song that was our first dance song in my head?", options: ["At Last", "Lover", "Perfect", "Me & U"], correct: 3},
+            {question: "What's the thing I look for in a best friend?", options: ["Loyalty", "Sense of humor", "Honesty", "Kindness"], correct: 0},
+            {question: "What's the most spontaneous thing I ever did with you?", options: ["Booked a last minute trip to the beach", "Drove around all night talking", "Got matching tattoos", "Adopted a plant on a whim"], correct: 0},
+            {question: "What's my favorite thing to order at a restaurant?", options: ["Steak frites", "Pizza", "Tagine", "Pasta"], correct: 2},
+            {question: "What's the thing I'm most grateful for?", options: ["My family", "My friends", "You", "My health"], correct: 2},
+            {question: "What's the show I'm currently binging right now?", options: ["Succession", "The Bear", "One Piece", "Outlander"], correct: 1},
+            {question: "What's the thing I want to do to celebrate our first big anniversary?", options: ["Go to Paris", "Have a big party", "Renew our vows in a small ceremony", "Go on a cruise"], correct: 0},
+            {question: "What's my favorite memory of us so far?", options: ["Our first date", "The first time I told you I loved you", "Our first trip together", "Every quiet night we spend at home"], correct: 3},
+            {question: "What's the thing I'm most excited to grow old with you doing?", options: ["Travel the world when we retire", "Buy a farm with lots of dogs", "Spend every day cooking together", "Watch our kids and grandkids grow up"], correct: 3}
+        ];
+
+        // 100 QUESTIONS D'INTERVIEW ALÉATOIRES
+        const interviewQuestions = [
+            "What's a small memory of us that you think about almost every day?",
+            "If you could relive one day of our relationship so far, which one would you choose and why?",
+            "What's a habit of mine that you used to find weird but now you can't live without?",
+            "If you had to describe our relationship in 3 emojis, what would they be and why?",
+            "What's the first thing you noticed about me that you didn't tell anyone at first?",
+            "What's a fear you have that you've never told anyone before, not even me?",
+            "If we could move to any city in the world tomorrow, where would you pick and what would our first week look like?",
+            "What's a song that instantly makes you think of me, and when did that start?",
+            "What's the most difficult thing we've gone through together, and how did it make you feel about us?",
+            "If you could change one small thing about how we met, what would it be?",
+            "What's a dream you have for your life that you haven't shared with many people?",
+            "What's something I do that makes you feel more loved than anything else?",
+            "If you could plan our perfect 10-year anniversary trip, where would we go and what would we do?",
+            "What's a childhood story of yours that you still think changes how you love people?",
+            "What's the most spontaneous thing you've ever wanted to do with me but haven't worked up the courage to ask?",
+            "What's a trait of mine that you find most frustrating, but also endearing?",
+            "If we could adopt any animal tomorrow (no limits, even exotic ones), what would we get?",
+            "What's a moment you felt so proud of me that you wanted to tell everyone you met?",
+            "What's a misconception you had about me before we started dating that turned out to be totally wrong?",
+            "If you could write a letter to your 18-year-old self about love, what would you say now that you're with me?",
+            "What's the best piece of advice your parents ever gave you about relationships?",
+            "What's a small thing I do that always turns your bad day around, no matter what?",
+            "If we could go back in time and give our first-date selves one piece of advice, what would it be?",
+            "What's a place you've always wanted to visit that you think would be perfect for us?",
+            "What's a fear you had about relationships before you met me that I helped you overcome?",
+            "If you could have any superpower that would only work to make our relationship better, what would you pick?",
+            "What's a tradition you want us to start that we do every single year, no exceptions?",
+            "What's the most romantic thing you've ever seen in a movie that you secretly want us to recreate?",
+            "What's a skill you want us to learn together in the next year, like painting or a new language?",
+            "What's a thing you miss most about the early days of our relationship that you wish we could bring back?",
+            "If you could have dinner with any version of me (past, present, future), which one would you pick and what would you ask?",
+            "What's a compliment you've never gotten tired of hearing from me, even if I say it every day?",
+            "What's a goal you have for us as a couple that you haven't told me about yet?",
+            "What's the weirdest thing you ever googled because you wanted to plan something special for us?",
+            "What's a memory of us that makes you laugh out loud even when you're alone?",
+            "If you could design our dream house from scratch, what's the first room you'd build and why?",
+            "What's a thing that your friends or family say about us that you love the most?",
+            "What's a fear you have about the future that you want us to work through together?",
+            "What's the first thing you thought when you realized you had a crush on me, before you even told me?",
+            "If we could only eat one meal for the rest of our lives, what would you pick that we both love?",
+            "What's a holiday you want us to start celebrating our own way, that's just for us?",
+            "What's a thing you admire about me that you wish you had more of in yourself?",
+            "What's the most unexpected way I've changed your life for the better?",
+            "If you could plan a perfect lazy day for just the two of us, what would the schedule look like from wake up to bed?",
+            "What's a song you want our first dance to be if we ever get married, even if it's not a 'traditional' wedding song?",
+            "What's a mistake you made in a past relationship that you're proud of yourself for not repeating with us?",
+            "What's a place that feels special to you that you want to take me to as soon as we can?",
+            "What's a question you've always wanted to ask me but were too nervous to bring up?",
+            "If you could trade lives with me for 24 hours, what's the first thing you'd do to understand how I see the world?",
+            "What's a small promise I made to you that I kept that meant more to you than any big gift?",
+            "What's the thing you're most excited about that's coming up for us in the next year?",
+            "What's a myth about love that you stopped believing in once you started dating me?",
+            "If we could start a business together, what would it be and what would our roles be?",
+            "What's a thing that you used to hate doing alone that you now love doing with me?",
+            "What's the most thoughtful thing I've ever done for you that you still think about often?",
+            "What's a dream you had as a kid that you still want to make come true with me?",
+            "If you could create a new holiday just for our relationship, what would we celebrate and what traditions would it have?",
+            "What's a trait of your parents' relationship that you want to carry over into ours?",
+            "What's the first thing you want to do when we wake up every morning, just for us?",
+            "What's a thing that scared you about being in a long-term relationship that turned out to be way better than you expected?",
+            "If we could take a class together on anything, what would you sign us up for without asking me first?",
+            "What's a moment you felt so safe with me that you knew this relationship was forever?",
+            "What's a thing you want us to do to give back to other people together, like volunteering or donating?",
+            "What's the most underrated thing about being in a relationship with me, that most people wouldn't notice?",
+            "If you could rewrite the script of the first time we said 'I love you', would you change anything, or leave it exactly as it was?",
+            "What's a hobby you want to get into that we can do together, like hiking or collecting something?",
+            "What's a thing that you think makes us a better team than any other couple you know?",
+            "What's the last thing that made you think 'I'm so lucky I get to do life with this person'?",
+            "If you could have any famous person play you in a movie about our relationship, who would you pick?",
+            "What's a thing you want us to teach our kids one day, that we learned together?",
+            "What's the best 'good morning' text I've ever sent you, that you still have saved?",
+            "What's a fear you had about moving in together (or if we haven't yet, what's the thing you're most nervous about) that turned out to be nothing?",
+            "What's a spontaneous trip you want us to take next, just pack a bag and leave this weekend?",
+            "What's a thing that I do that you find way more attractive than any physical trait?",
+            "What's the best gift I've ever gotten you, that wasn't even expensive but meant the world?",
+            "If you could go to any concert together in the world, dead or alive artist, who would you see?",
+            "What's a thing you want to unlearn from past relationships that you're still working through with me?",
+            "What's the first thing you'd do if we won the lottery tomorrow, together?",
+            "What's a memory of your family that you want to recreate with our own family one day?",
+            "What's the thing you love most about the way we resolve fights, that works for us?",
+            "What's a thing you want us to do to keep our relationship fun and exciting even years from now?",
+            "If you could write a one-star review about dating me, what's the silly 'complaint' you'd write?",
+            "What's the moment you knew you wanted to spend the rest of your life with me?",
+            "What's a thing you're grateful for that we disagree on, because it makes our relationship better?",
+            "What's the best piece of advice you'd give to a couple that's just starting out, that you learned from us?",
+            "What's a small tradition we already have that you want to keep doing for the rest of our lives?",
+            "If you could spend a whole day doing exactly what I love most, just to make me happy, what would you plan?",
+            "What's the thing you're most proud of that we've built together so far?",
+            "What's a question you wish someone would ask you about our relationship that no one ever thinks to ask?",
+            "What's the last thing that made you cry happy tears because of something I did or said?",
+            "What's the thing you're most excited to grow old with me doing, that most people don't think about?",
+            "If you could describe what love feels like to you now, after being with me, how would you explain it to someone who's never been in love?",
+            "What's the one thing you want me to always remember about you, no matter how much time passes?",
+            "What's the thing you want to tell me right now that you haven't gotten around to saying yet?"
+        ];
+
+        // --------------------------
+        // FONCTIONNEMENT GÉNÉRAL DU SITE
+        // --------------------------
+        const passwordOverlay = document.getElementById('password-overlay');
+        const mainSite = document.getElementById('main-site');
+        const passwordSubmit = document.getElementById('password-submit');
+        const passwordInput = document.getElementById('password-input');
+        const passwordError = document.getElementById('password-error');
+        const daysLabel = document.getElementById('days-label');
+
+        // Mot de passe
+        passwordSubmit.addEventListener('click', () => {
+            if (passwordInput.value === SITE_PASSWORD) {
+                passwordOverlay.classList.add('hidden');
+                mainSite.classList.add('visible');
+            } else {
+                passwordError.style.display = 'block';
+            }
+        });
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') passwordSubmit.click();
+        });
+
+        // Timer
+        function updateTimer() {
+            const now = new Date();
+            const isFuture = RELATIONSHIP_START > now;
+            daysLabel.textContent = isFuture ? "Jours restants" : "Jours ensemble";
+            const diff = Math.abs(now - RELATIONSHIP_START);
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 100);
+            document.getElementById('days').textContent = days;
+            document.getElementById('hours').textContent = hours;
+            document.getElementById('minutes').textContent = minutes;
+            document.getElementById('seconds').textContent = seconds;
+        }
+        setInterval(updateTimer, 1000);
+        updateTimer();
+
+        // Lightbox photos
+        const galleryItems = document.querySelectorAll('.gallery-item img');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxClose = document.getElementById('lightbox-close');
+        galleryItems.forEach(img => {
+            img.addEventListener('click', () => {
+                lightboxImg.src = img.src;
+                lightbox.classList.add('active');
+            });
+        });
+        lightboxClose.addEventListener('click', () => lightbox.classList.remove('active'));
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) lightbox.classList.remove('active');
+        });
+
+        // Map
+        const map = L.map('map').setView([35.9268, 0.0849], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+        MAP_MILESTONES.forEach(milestone => {
+            L.marker([milestone.lat, milestone.lng]).addTo(map)
+                .bindPopup(milestone.popup);
+        });
+
+        // Bucket list accordéon + sauvegarde des cases
+        const continentHeaders = document.querySelectorAll('.continent-header');
+        continentHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                header.classList.toggle('open');
+                header.nextElementSibling.classList.toggle('open');
+            });
+        });
+        const bucketChecks = document.querySelectorAll('.bucket-check');
+        bucketChecks.forEach((check, index) => {
+            const saved = localStorage.getItem(`bucket-${index}`);
+            if (saved === 'true') {
+                check.checked = true;
+                check.parentElement.classList.add('checked');
+            }
+            check.addEventListener('change', () => {
+                localStorage.setItem(`bucket-${index}`, check.checked);
+                check.parentElement.classList.toggle('checked', check.checked);
+            });
+        });
+
+        // --------------------------
+        // FONCTIONNEMENT DES JEUX
+        // --------------------------
+        // Initialiser le swipe des jeux
+        const swiper = new Swiper(".mySwiper", {
+            slidesPerView: 1.2,
+            spaceBetween: 20,
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
+            },
+            breakpoints: {
+                768: {
+                    slidesPerView: 2,
+                },
+                1024: {
+                    slidesPerView: 2,
+                }
+            }
+        });
+
+        // Elements globaux des jeux
+        const gameCards = document.querySelectorAll('.game-card');
+        const activeGameZone = document.getElementById('active-game');
+        const backBtn = document.getElementById('back-to-games');
+        const swiperContainer = document.querySelector('.games-swiper');
+        let currentQuestion, quizScore, roundQuestions, interviewCurrentIndex, interviewShuffled;
+
+        // Fonction pour mélanger les questions
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // Lancer le jeu quand on clique sur sa carte
+        gameCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const gameName = card.dataset.game;
+                swiperContainer.style.display = 'none';
+                backBtn.style.display = 'block';
+                if (gameName === 'quiz') loadQuiz();
+                if (gameName === 'interview') loadInterview();
+            });
+        });
+
+        // Bouton retour à la liste des jeux
+        backBtn.addEventListener('click', () => {
+            swiperContainer.style.display = 'block';
+            backBtn.style.display = 'none';
+            activeGameZone.innerHTML = "";
+        });
+
+        // --------------------------
+        // LOGIQUE DU QUIZ
+        // --------------------------
+        function loadQuiz() {
+            const shuffled = shuffleArray(quizQuestions);
+            roundQuestions = shuffled.slice(0, Math.min(quizQuestionsPerRound, shuffled.length));
+            currentQuestion = 0;
+            quizScore = 0;
+            
+            activeGameZone.innerHTML = `
+                <div id="quiz-container">
+                    <p class="quiz-question" id="quiz-question"></p>
+                    <div class="quiz-options" id="quiz-options"></div>
+                    <div class="quiz-score" id="quiz-score">Score: 0/${roundQuestions.length}</div>
+                    <button id="quiz-reset">Rejouer le quiz</button>
+                </div>
+            `;
+            const quizQuestionEl = document.getElementById('quiz-question');
+            const quizOptionsEl = document.getElementById('quiz-options');
+            const quizScoreEl = document.getElementById('quiz-score');
+            const quizResetBtn = document.getElementById('quiz-reset');
+
+            function loadQuestion() {
+                if (currentQuestion >= roundQuestions.length) {
+                    quizQuestionEl.textContent = `You finished the quiz! Your final score: ${quizScore}/${roundQuestions.length} ${quizScore >= roundQuestions.length*0.7 ? "You know me so well! I love you ❤️" : "We need to spend more time together, I'll teach you everything about me 😉"}`;
+                    quizOptionsEl.innerHTML = "";
+                    return;
+                }
+                const q = roundQuestions[currentQuestion];
+                quizQuestionEl.textContent = q.question;
+                quizOptionsEl.innerHTML = "";
+                q.options.forEach((option, index) => {
+                    const optionEl = document.createElement('div');
+                    optionEl.classList.add('quiz-option');
+                    optionEl.textContent = option;
+                    optionEl.addEventListener('click', () => checkAnswer(index, q.correct, optionEl));
+                    quizOptionsEl.appendChild(optionEl);
+                });
+            }
+            function checkAnswer(selected, correct, el) {
+                const allOptions = document.querySelectorAll('.quiz-option');
+                allOptions.forEach(opt => opt.style.pointerEvents = "none");
+                if (selected === correct) {
+                    el.classList.add('correct');
+                    quizScore++;
+                } else {
+                    el.classList.add('wrong');
+                    allOptions[correct].classList.add('correct');
+                }
+                quizScoreEl.textContent = `Score: ${quizScore}/${roundQuestions.length}`;
+                currentQuestion++;
+                setTimeout(loadQuestion, 1500);
+            }
+            quizResetBtn.addEventListener('click', () => loadQuiz());
+            loadQuestion();
+        }
+
+        // --------------------------
+        // LOGIQUE DE L'INTERVIEW GAME
+        // --------------------------
+        function loadInterview() {
+            interviewShuffled = shuffleArray(interviewQuestions);
+            interviewCurrentIndex = 0;
+            
+            activeGameZone.innerHTML = `
+                <div class="interview-container">
+                    <p class="interview-question-counter" id="question-counter">Question 1 of ${interviewShuffled.length}</p>
+                    <p class="interview-current-question" id="current-question">${interviewShuffled[0]}</p>
+                    <button class="game-next-btn" id="next-question">Next Question</button>
+                    <button class="game-reset-btn" id="restart-interview">Start New Interview</button>
+                </div>
+            `;
+            const nextBtn = document.getElementById('next-question');
+            const restartBtn = document.getElementById('restart-interview');
+            const questionEl = document.getElementById('current-question');
+            const counterEl = document.getElementById('question-counter');
+
+            nextBtn.addEventListener('click', () => {
+                interviewCurrentIndex++;
+                if (interviewCurrentIndex >= interviewShuffled.length) {
+                    questionEl.textContent = "You finished all 100 questions! I learned so much about you today, I love you ❤️";
+                    nextBtn.style.display = 'none';
+                    return;
+                }
+                questionEl.textContent = interviewShuffled[interviewCurrentIndex];
+                counterEl.textContent = `Question ${interviewCurrentIndex + 1} of ${interviewShuffled.length}`;
+            });
+
+            restartBtn.addEventListener('click', () => loadInterview());
+        }
+    </script>
+</body>
+</html>
